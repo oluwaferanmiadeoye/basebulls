@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BaseBulls NFT</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Space+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <style>
+      body {
+        font-family: "Orbitron", sans-serif;
+        background-color: #0f172a;
+        color: white;
+        cursor: default;
+        overflow-x: hidden;
+      }
+
+      .space-mono {
+        font-family: "Space Mono", monospace;
+      }
+
+      .glow {
+        text-shadow: 0 0 10px rgba(96, 165, 250, 0.7),
+          0 0 20px rgba(96, 165, 250, 0.5);
+      }
+
+      .glow-box {
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.5),
+          0 0 30px rgba(59, 130, 246, 0.3);
+      }
+
+      .pixel-border {
+        box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px #3b82f6;
+      }
+
+      .parallax {
+        transform: translateZ(0);
+        will-change: transform;
+      }
+
+      .bg-stars {
+        background-image: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.1) 1px,
+          transparent 1px
+        );
+        background-size: 50px 50px;
+      }
+
+      .card-hover {
+        transition: all 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+      }
+
+      #canvas-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.3;
+      }
+
+      .slide-in-left {
+        opacity: 0;
+        transform: translateX(-50px);
+      }
+
+      .slide-in-right {
+        opacity: 0;
+        transform: translateX(50px);
+      }
+
+      .fade-in {
+        opacity: 0;
+      }
+
+      .nft-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+
+      .nft-item {
+        aspect-ratio: 1/1;
+        transform-style: preserve-3d;
+        transition: transform 0.5s;
+      }
+
+      .nft-item:hover {
+        transform: translateZ(20px) rotateX(5deg) rotateY(5deg);
+      }
+
+      /* Pixel art bull placeholders */
+      .pixel-bull {
+        image-rendering: pixelated;
+        background-size: cover;
+      }
+
+      .pixel-bull-1 {
+        background: linear-gradient(45deg, #3b82f6, #1e40af);
+      }
+
+      .pixel-bull-2 {
+        background: linear-gradient(45deg, #ec4899, #831843);
+      }
+
+      .pixel-bull-3 {
+        background: linear-gradient(45deg, #eab308, #854d0e);
+      }
+
+      .pixel-bull-4 {
+        background: linear-gradient(45deg, #10b981, #065f46);
+      }
+
+      .progress-bar {
+        height: 10px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        border-radius: 5px;
+        transition: width 1.5s ease;
+      }
+
+      .scan-line {
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        position: absolute;
+        height: 100px;
+        width: 100%;
+        z-index: 10;
+        pointer-events: none;
+        animation: scanAnimation 3s linear infinite;
+        opacity: 0.3;
+      }
+
+      @keyframes scanAnimation {
+        0% {
+          top: -100px;
+        }
+        100% {
+          top: 100%;
+        }
+      }
+
+      /* Terminal effect */
+      .terminal {
+        border: 2px solid #3b82f6;
+        background-color: rgba(15, 23, 42, 0.9);
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        font-family: "Space Mono", monospace;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .terminal-header {
+        border-bottom: 1px solid #3b82f6;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .blink {
+        animation: blink 1s infinite;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+
+      /* Market ticker tape */
+      .ticker-tape {
+        overflow: hidden;
+        white-space: nowrap;
+        background-color: rgba(15, 23, 42, 0.8);
+        padding: 0.5rem 0;
+      }
+
+      .ticker-content {
+        display: inline-block;
+        animation: tickerTape 20s linear infinite;
+        padding-right: 50px;
+      }
+
+      @keyframes tickerTape {
+        0% {
+          transform: translateX(100%);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
+      .blueprint-grid {
+        background-image: linear-gradient(
+            rgba(59, 130, 246, 0.1) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-position: center center;
+      }
+    </style>
+  </head>
+
+  <body class="min-h-screen">
+    <div id="canvas-container"></div>
+    <div class="scan-line"></div>
+
+    <!-- Ticker Tape -->
+
+    <div class="pt-16 relative z-10">
+      <header class="text-center py-16 relative">
+        <div class="absolute inset-0 bg-stars"></div>
+        <div class="container mx-auto px-6">
+          <h1
+            class="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-purple-600 glow fade-in"
+          >
+            BaseBulls
+          </h1>
+          <p
+            class="text-xl md:text-2xl text-gray-300 mt-4 max-w-2xl mx-auto fade-in"
+          >
+            Pixel-perfect NFT collection charging forward on the Base Blockchain
+          </p>
+
+          <div class="mt-8 flex flex-wrap justify-center gap-4 fade-in">
+            <a
+              href="#"
+              class="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 glow-box uppercase tracking-wider flex items-center"
+            >
+              <span>Mint Now</span>
+              <span class="ml-2 text-yellow-300">●</span>
+            </a>
+            <a
+              href="https://x.com/BaseBullsNFT"
+              class="bg-gray-800 hover:bg-gray-900 text-white py-3 px-6 rounded-xl transition-all duration-300 hover:border-blue-400 border-2 border-transparent flex items-center"
+            >
+              <span>Follow on Twitter</span>
+            </a>
+            <a
+              href="#"
+              class="bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-xl transition-all duration-300 hover:border-purple-400 border-2 border-transparent flex items-center"
+            >
+              <span>Join Discord</span>
+            </a>
+          </div>
+
+          <div class="mt-12 relative">
+            <div class="h-2 w-full bg-gray-800 rounded-full max-w-md mx-auto">
+              <div class="progress-bar" style="width: 78.45%"></div>
+            </div>
+            <p class="mt-2 text-blue-300 space-mono">
+              <span id="mint-count">7,845</span> / 10,000 Bulls Minted
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div class="container mx-auto px-6 mb-24">
+        <!-- Featured NFTs -->
+        <div class="my-16 slide-in-left">
+          <h2
+            class="text-3xl font-bold mb-8 text-blue-300 inline-block border-b-4 border-blue-500 pb-2"
+          >
+            Featured Bulls
+          </h2>
+
+          <div class="nft-grid">
+            <div
+              class="nft-item pixel-border rounded-lg overflow-hidden shadow-lg card-hover pixel-bull pixel-bull-1"
+            >
+              <div class="p-3 bg-black bg-opacity-70">
+                <p class="text-sm">Bull #1342</p>
+                <p class="text-xs text-blue-400">Rarity: Legendary</p>
+              </div>
+            </div>
+            <div
+              class="nft-item pixel-border rounded-lg overflow-hidden shadow-lg card-hover pixel-bull pixel-bull-2"
+            >
+              <div class="p-3 bg-black bg-opacity-70">
+                <p class="text-sm">Bull #723</p>
+                <p class="text-xs text-pink-400">Rarity: Epic</p>
+              </div>
+            </div>
+            <div
+              class="nft-item pixel-border rounded-lg overflow-hidden shadow-lg card-hover pixel-bull pixel-bull-3"
+            >
+              <div class="p-3 bg-black bg-opacity-70">
+                <p class="text-sm">Bull #4851</p>
+                <p class="text-xs text-yellow-400">Rarity: Rare</p>
+              </div>
+            </div>
+            <div
+              class="nft-item pixel-border rounded-lg overflow-hidden shadow-lg card-hover pixel-bull pixel-bull-4"
+            >
+              <div class="p-3 bg-black bg-opacity-70">
+                <p class="text-sm">Bull #926</p>
+                <p class="text-xs text-green-400">Rarity: Uncommon</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- About & Tokenomics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-16">
+          <section
+            class="bg-blue-900 bg-opacity-20 p-8 rounded-2xl shadow-lg terminal slide-in-left"
+          >
+            <div class="terminal-header">
+              <span class="text-blue-400">about.basebulls</span>
+              <div>
+                <span
+                  class="inline-block w-3 h-3 rounded-full bg-red-500 mx-1"
+                ></span>
+                <span
+                  class="inline-block w-3 h-3 rounded-full bg-yellow-500 mx-1"
+                ></span>
+                <span
+                  class="inline-block w-3 h-3 rounded-full bg-green-500 mx-1"
+                ></span>
+              </div>
+            </div>
+            <p class="mb-4 text-blue-300">
+              > <span id="typing" class="text-white"></span
+              ><span class="blink">|</span>
+            </p>
+            <p class="text-gray-300 hidden" id="about-text">
+              BaseBulls is a collection of 10,000 pixel-art NFTs on the Base
+              blockchain. Each bull is uniquely generated with over 150 traits
+              of varying rarity.
+            </p>
+            <p class="text-gray-300 mt-4 hidden" id="about-text-2">
+              More than just artwork, these bulls provide access to a vibrant
+              community, exclusive events, and evolving utility in the Base
+              ecosystem.
+            </p>
+          </section>
+
+          <section
+            class="bg-blue-900 bg-opacity-20 p-8 rounded-2xl shadow-lg pixel-border glow-box blueprint-grid slide-in-right"
+          >
+            <h2
+              class="text-2xl font-semibold text-blue-300 mb-6 border-b border-blue-500 pb-2"
+            >
+              Tokenomics
+            </h2>
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <span class="text-gray-300">Token:</span>
+                <span class="text-green-400 font-mono text-xl">$BULL</span>
+              </div>
+              <div
+                class="flex items-center bg-blue-900 bg-opacity-40 p-3 rounded space-mono"
+              >
+                <span class="text-xs text-gray-400 mr-2">Contract:</span>
+                <span class="text-sm text-blue-200 overflow-auto max-w-full"
+                  >0xfb92b9723348546896EC87C293921e1d31e4f698</span
+                >
+                <button
+                  class="ml-2 text-blue-400 hover:text-blue-300 text-xs"
+                  onclick="alert('Copied to clipboard!')"
+                >
+                  COPY
+                </button>
+              </div>
+              <div class="flex flex-col space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-300">Total Supply:</span>
+                  <span class="text-yellow-400">100,000,000</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-300">Circulating:</span>
+                  <span class="text-yellow-400">42,157,890</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-300">Staking Rewards:</span>
+                  <span class="text-yellow-400">30%</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-300">Treasury:</span>
+                  <span class="text-yellow-400">25%</span>
+                </div>
+              </div>
+              <div class="mt-4 p-3 bg-gray-900 bg-opacity-50 rounded-lg">
+                <div class="flex justify-between text-sm mb-1">
+                  <span>Available on:</span>
+                  <span class="text-green-400">Uniswap (Base)</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-blue-300">Current Price:</span>
+                  <span class="text-lg text-green-400">$0.0824</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Utility & Community -->
+        <section
+          class="bg-blue-800 bg-opacity-20 p-8 rounded-2xl shadow-xl my-16 relative overflow-hidden fade-in"
+        >
+          <div class="absolute inset-0 blueprint-grid"></div>
+          <h2
+            class="text-3xl font-bold text-center text-yellow-300 mb-8 relative"
+          >
+            Utility & Community
+          </h2>
+
+          <div class="grid md:grid-cols-2 gap-8 relative">
+            <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl card-hover">
+              <h3
+                class="text-2xl font-semibold text-blue-300 mb-4 flex items-center"
+              >
+                <svg
+                  class="w-6 h-6 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  ></path>
+                </svg>
+                Utility
+              </h3>
+              <ul class="space-y-3 text-gray-200">
+                <li class="flex items-start">
+                  <span class="text-blue-400 mr-2">■</span>
+                  <span
+                    >VIP access to exclusive IRL events in major crypto
+                    hubs</span
+                  >
+                </li>
+                <li class="flex items-start">
+                  <span class="text-blue-400 mr-2">■</span>
+                  <span
+                    >Community-driven governance and treasury management</span
+                  >
+                </li>
+                <li class="flex items-start">
+                  <span class="text-blue-400 mr-2">■</span>
+                  <span
+                    >Limited-edition merchandise available only to holders</span
+                  >
+                </li>
+                <li class="flex items-start">
+                  <span class="text-blue-400 mr-2">■</span>
+                  <span>$BULL staking with variable APY based on rarity</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-blue-400 mr-2">■</span>
+                  <span>Early access to future Base ecosystem projects</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl card-hover">
+              <h3
+                class="text-2xl font-semibold text-purple-300 mb-4 flex items-center"
+              >
+                <svg
+                  class="w-6 h-6 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  ></path>
+                </svg>
+                Community
+              </h3>
+              <ul class="space-y-3 text-gray-200">
+                <li class="flex items-start">
+                  <span class="text-purple-400 mr-2">■</span>
+                  <span
+                    >Telegram: 24/7 active discussion with regular drops and
+                    contests</span
+                  >
+                </li>
+                <li class="flex items-start">
+                  <span class="text-purple-400 mr-2">■</span>
+                  <span
+                    >Weekly Twitter Spaces with team and special guest
+                    speakers</span
+                  >
+                </li>
+                <li class="flex items-start">
+                  <span class="text-purple-400 mr-2">■</span>
+                  <span
+                    >Monthly virtual meetups and quarterly IRL gatherings</span
+                  >
+                </li>
+                <li class="flex items-start">
+                  <span class="text-purple-400 mr-2">■</span>
+                  <span
+                    >Community-driven roadmap voting and development
+                    suggestions</span
+                  >
+                </li>
+                <li class="flex items-start">
+                  <span class="text-purple-400 mr-2">■</span>
+                  <span
+                    >Exclusive Discord channels for verified holders with direct
+                    team access</span
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Roadmap -->
+        <section class="my-16 fade-in">
+          <h2 class="text-3xl font-bold text-center text-blue-300 mb-8">
+            Roadmap
+          </h2>
+          <div class="relative">
+            <!-- Timeline line -->
+            <div
+              class="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-blue-600"
+            ></div>
+
+            <!-- Phase 1 -->
+            <div class="relative mb-16">
+              <div
+                class="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/4"
+              >
+                <div
+                  class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center glow-box"
+                >
+                  <span class="text-white font-bold">1</span>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-8">
+                <div class="col-span-1 text-right pr-8">
+                  <h3 class="text-xl font-bold text-blue-400">Genesis Phase</h3>
+                  <p class="text-gray-300 mt-2">Q1 2025</p>
+                </div>
+                <div
+                  class="col-span-1 bg-gray-900 bg-opacity-60 p-4 rounded-xl card-hover"
+                >
+                  <ul class="text-gray-200 text-sm space-y-2">
+                    <li>✓ Initial mint of 10,000 BaseBulls</li>
+                    <li>✓ Community building initiatives</li>
+                    <li>✓ $BULL token launch</li>
+                    <li>• Marketplace integration</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Phase 2 -->
+            <div class="relative mb-16">
+              <div
+                class="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/4"
+              >
+                <div
+                  class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center glow-box"
+                >
+                  <span class="text-white font-bold">2</span>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-8">
+                <div class="col-span-1 text-right pr-8">
+                  <div
+                    class="bg-gray-900 bg-opacity-60 p-4 rounded-xl card-hover"
+                  >
+                    <ul class="text-gray-200 text-sm space-y-2">
+                      <li>• Staking mechanism launch</li>
+                      <li>• First IRL community event</li>
+                      <li>• Companion NFT airdrop</li>
+                      <li>• Partnership announcements</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="col-span-1">
+                  <h3 class="text-xl font-bold text-purple-400">
+                    Expansion Phase
+                  </h3>
+                  <p class="text-gray-300 mt-2">Q2 2025</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Phase 3 -->
+            <div class="relative">
+              <div
+                class="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/4"
+              >
+                <div
+                  class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center glow-box"
+                >
+                  <span class="text-white font-bold">3</span>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-8">
+                <div class="col-span-1 text-right pr-8">
+                  <h3 class="text-xl font-bold text-green-400">
+                    Utility Phase
+                  </h3>
+                  <p class="text-gray-300 mt-2">Q3 2025</p>
+                </div>
+                <div
+                  class="col-span-1 bg-gray-900 bg-opacity-60 p-4 rounded-xl card-hover"
+                >
+                  <ul class="text-gray-200 text-sm space-y-2">
+                    <li>• Interactive metaverse experience</li>
+                    <li>• Gaming integrations</li>
+                    <li>• Advanced rarity tools</li>
+                    <li>• Creator royalty program</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- FAQs -->
+        <section
+          class="p-8 rounded-2xl bg-gray-900 bg-opacity-70 shadow-inner my-16 slide-in-right"
+        >
+          <h2 class="text-3xl font-bold text-center text-purple-300 mb-6">
+            FAQs
+          </h2>
+          <div class="space-y-6 text-gray-200 max-w-3xl mx-auto">
+            <div
+              class="bg-blue-900 bg-opacity-20 p-4 rounded-xl hover:bg-opacity-30 transition-all duration-300"
+            >
+              <h3 class="text-xl font-semibold text-blue-300 mb-2">
+                What is BaseBulls?
+              </h3>
+              <p>
+                A premium NFT project on Base blockchain, featuring 10,000 pixel
+                art bulls with unique personalities, traits, and utility. Each
+                bull is procedurally generated with over 150 possible traits
+                across multiple categories.
+              </p>
+            </div>
+
+            <div
+              class="bg-blue-900 bg-opacity-20 p-4 rounded-xl hover:bg-opacity-30 transition-all duration-300"
+            >
+              <h3 class="text-xl font-semibold text-blue-300 mb-2">
+                Where can I buy BaseBulls?
+              </h3>
+              <p>
+                You can mint directly on our website or trade on major
+                marketplaces like OpenSea and MagicEden. The $BULL token is
+                available on Uniswap (Base chain).
+              </p>
+            </div>
+
+            <div
+              class="bg-blue-900 bg-opacity-20 p-4 rounded-xl hover:bg-opacity-30 transition-all duration-300"
+            >
+              <h3 class="text-xl font-semibold text-blue-300 mb-2">
+                What's the utility?
+              </h3>
+              <p>
+                BaseBulls provide exclusive access to community events,
+                governance rights, staking opportunities with the $BULL token,
+                merchandise drops, and upcoming metaverse integrations. Rarer
+                bulls come with enhanced benefits.
+              </p>
+            </div>
+
+            <div
+              class="bg-blue-900 bg-opacity-20 p-4 rounded-xl hover:bg-opacity-30 transition-all duration-300"
+            >
+              <h3 class="text-xl font-semibold text-blue-300 mb-2">
+                What is Base?
+              </h3>
+              <p>
+                Base is an Ethereum Layer 2 blockchain developed by Coinbase,
+                designed for fast and affordable decentralized applications and
+                NFTs. It provides the security of Ethereum with significantly
+                lower transaction costs and faster confirmation times.
+              </p>
+            </div>
+
+            <div
+              class="bg-blue-900 bg-opacity-20 p-4 rounded-xl hover:bg-opacity-30 transition-all duration-300"
+            >
+              <h3 class="text-xl font-semibold text-blue-300 mb-2">
+                How can I get involved?
+              </h3>
+              <p>
+                Join our Discord and Telegram communities, follow us on Twitter,
+                participate in our weekly AMAs, and attend our virtual and IRL
+                events. Holding a BaseBull NFT grants you full access to all
+                community activities and governance.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Join Community -->
+        <section class="my-16 text-center fade-in">
+          <h2 class="text-3xl font-bold text-center text-green-400 mb-6">
+            Join The Stampede
+          </h2>
+          <p class="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
+            Be part of the most exciting NFT community on Base. Bull run
+            incoming!
+          </p>
+
+          <div class="flex flex-wrap justify-center gap-4">
+            <a
+              href="#"
+              class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center"
+            >
+              <span>Discord</span>
+              <span class="ml-2">→</span>
+            </a>
+            <a
+              href="#"
+              class="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center"
+            >
+              <span>Telegram</span>
+              <span class="ml-2">→</span>
+            </a>
+            <a
+              href="#"
+              class="bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 flex items-center"
+            >
+              <span>Twitter</span>
+              <span class="ml-2">→</span>
+            </a>
+          </div>
+        </section>
+      </div>
+
+      <!-- Footer -->
+      <footer class="bg-gray-900 border-t border-blue-800 py-8 relative">
+        <div class="container mx-auto px-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+              <h3 class="text-xl font-bold text-blue-400 mb-4">BaseBulls</h3>
+              <p class="text-gray-400 text-sm">
+                A premium NFT collection on Base blockchain with 10,000 unique
+                pixel-art bulls.
+              </p>
+              <div class="mt-4 flex space-x-4">
+                <a href="#" class="text-blue-400 hover:text-blue-300">
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"
+                    />
+                  </svg>
+                </a>
+                <a href="#" class="text-blue-400 hover:text-blue-300">
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M12 0C5.374 0 0 5.374 0 12s5.374 12 12 12 12-5.374 12-12S18.626 0 12 0zm3.616 8.76c-.936-.28-1.275-.28-2.155-.28h-2.923c-1.936 0-2.155.28-2.155 2.1v2.1c0 1.82.219 2.1 2.155 2.1h2.923c.6 0 .9 0 1.274-.28v2.179c-.375.28-.674.28-1.274.28h-2.923C6.219 17.239 4.8 15.419 4.8 12.959v-2.1c0-2.455 1.42-4.279 3.538-4.279h2.923c1.819 0 2.618.245 3.355.98l-1.12 1.12c-.28-.28-.655-.56-1.275-.56z"
+                    />
+                  </svg>
+                </a>
+                <a href="#" class="text-blue-400 hover:text-blue-300">
+                  <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-xl font-bold text-blue-400 mb-4">Quick Links</h3>
+              <ul class="space-y-2 text-gray-400">
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-blue-300 transition-all duration-300"
+                    >Mint</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-blue-300 transition-all duration-300"
+                    >Marketplace</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-blue-300 transition-all duration-300"
+                    >Tokenomics</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-blue-300 transition-all duration-300"
+                    >Roadmap</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    class="hover:text-blue-300 transition-all duration-300"
+                    >FAQs</a
+                  >
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-xl font-bold text-blue-400 mb-4">Newsletter</h3>
+              <p class="text-gray-400 text-sm mb-4">
+                Get the latest BaseBulls updates and announcements.
+              </p>
+              <form class="flex">
+                <input
+                  type="email"
+                  placeholder="Your email"
+                  class="bg-gray-800 text-white px-4 py-2 rounded-l-lg focus:outline-none w-full"
+                />
+                <button
+                  type="submit"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg transition-all duration-300"
+                >
+                  Subscribe
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div class="mt-8 border-t border-gray-800 pt-6 text-center">
+            <p class="text-gray-500 text-sm">
+              &copy; 2025 BaseBulls NFT. All rights reserved.
+            </p>
+            <p class="text-gray-600 text-xs mt-2">
+              Smart contract: 0x2f8e31c9d3092482A2F54a4F4e5af789943CC0b6
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Mobile Menu (Hidden by default) -->
+    <div
+      id="mobile-menu"
+      class="fixed inset-0 bg-gray-900 bg-opacity-95 z-50 transform translate-x-full transition-transform duration-300 ease-in-out"
+    >
+      <div class="flex justify-end p-4">
+        <button id="close-menu" class="text-white p-2 focus:outline-none">
+          <svg
+            class="w-8 h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      <div class="flex flex-col items-center justify-center h-full">
+        <ul class="text-center space-y-8">
+          <li>
+            <a
+              href="#"
+              class="text-3xl font-bold text-white hover:text-blue-400 transition-all duration-300"
+              >Home</a
+            >
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-3xl font-bold text-white hover:text-blue-400 transition-all duration-300"
+              >Mint</a
+            >
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-3xl font-bold text-white hover:text-blue-400 transition-all duration-300"
+              >Collection</a
+            >
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-3xl font-bold text-white hover:text-blue-400 transition-all duration-300"
+              >Roadmap</a
+            >
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-3xl font-bold text-white hover:text-blue-400 transition-all duration-300"
+              >FAQs</a
+            >
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-3xl font-bold text-white hover:text-blue-400 transition-all duration-300"
+              >Community</a
+            >
+          </li>
+        </ul>
+        <div class="mt-16 flex space-x-6">
+          <a
+            href="#"
+            class="text-white hover:text-blue-400 transition-all duration-300"
+          >
+            <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"
+              />
+            </svg>
+          </a>
+          <a
+            href="#"
+            class="text-white hover:text-blue-400 transition-all duration-300"
+          >
+            <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"
+              />
+            </svg>
+          </a>
+          <a
+            href="#"
+            class="text-white hover:text-blue-400 transition-all duration-300"
+          >
+            <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M12 0C5.374 0 0 5.374 0 12s5.374 12 12 12 12-5.374 12-12S18.626 0 12 0zm3.616 8.76c-.936-.28-1.275-.28-2.155-.28h-2.923c-1.936 0-2.155.28-2.155 2.1v2.1c0 1.82.219 2.1 2.155 2.1h2.923c.6 0 .9 0 1.274-.28v2.179c-.375.28-.674.28-1.274.28h-2.923C6.219 17.239 4.8 15.419 4.8 12.959v-2.1c0-2.455 1.42-4.279 3.538-4.279h2.923c1.819 0 2.618.245 3.355.98l-1.12 1.12c-.28-.28-.655-.56-1.275-.56z"
+              />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Toggle -->
+    <div class="fixed top-4 right-4 z-40 md:hidden">
+      <button
+        id="open-menu"
+        class="bg-blue-900 bg-opacity-80 text-white p-2 rounded-lg focus:outline-none"
+      >
+        <svg
+          class="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Desktop Navigation -->
+    <nav
+      class="hidden md:block fixed top-0 left-0 right-0 z-40 bg-gray-900 bg-opacity-80 backdrop-filter backdrop-blur-md"
+    >
+      <div class="container mx-auto px-6">
+        <div class="flex justify-between items-center py-4">
+          <a
+            href="#"
+            class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600"
+            >BaseBulls</a
+          >
+          <div class="flex space-x-8">
+            <a
+              href="#"
+              class="text-white hover:text-blue-400 transition-all duration-300"
+              >Home</a
+            >
+            <a
+              href="#"
+              class="text-white hover:text-blue-400 transition-all duration-300"
+              >Mint</a
+            >
+            <a
+              href="#"
+              class="text-white hover:text-blue-400 transition-all duration-300"
+              >Collection</a
+            >
+            <a
+              href="#"
+              class="text-white hover:text-blue-400 transition-all duration-300"
+              >Roadmap</a
+            >
+            <a
+              href="#"
+              class="text-white hover:text-blue-400 transition-all duration-300"
+              >FAQs</a
+            >
+            <a
+              href="#"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-300"
+              >Connect Wallet</a
+            >
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        AOS.init();
+      });
+
+      // Three.js Background
+      function initThreeBackground() {
+        const container = document.getElementById("canvas-container");
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const starGeometry = new THREE.BufferGeometry();
+        const starMaterial = new THREE.PointsMaterial({
+          color: 0x3b82f6,
+          size: 0.1,
+        });
+
+        const starVertices = [];
+        for (let i = 0; i < 2000; i++) {
+          const x = (Math.random() - 0.5) * 2000;
+          const y = (Math.random() - 0.5) * 2000;
+          const z = (Math.random() - 0.5) * 2000;
+          starVertices.push(x, y, z);
+        }
+
+        starGeometry.setAttribute(
+          "position",
+          new THREE.Float32BufferAttribute(starVertices, 3)
+        );
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        camera.position.z = 5;
+
+        function animate() {
+          requestAnimationFrame(animate);
+          stars.rotation.x += 0.0002;
+          stars.rotation.y += 0.0002;
+          renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        window.addEventListener("resize", onWindowResize);
+        animate();
+      }
+
+      // Initialize typing effect
+      function initTypingEffect() {
+        const typingText =
+          "BaseBulls is a collection of 10,000 pixel-art NFTs on the Base blockchain. Each bull is uniquely generated with over 150 traits of varying rarity.";
+        const typingElement = document.getElementById("typing");
+        const aboutText = document.getElementById("about-text");
+        const aboutText2 = document.getElementById("about-text-2");
+
+        let i = 0;
+        const speed = 50;
+
+        function typeWriter() {
+          if (i < typingText.length) {
+            typingElement.innerHTML += typingText.charAt(i);
+            i++;
+            setTimeout(typeWriter, speed);
+          } else {
+            setTimeout(() => {
+              aboutText.classList.remove("hidden");
+              setTimeout(() => {
+                aboutText2.classList.remove("hidden");
+              }, 500);
+            }, 1000);
+          }
+        }
+
+        typeWriter();
+      }
+
+      // Initialize animations
+      function initAnimations() {
+        // Fade in elements
+        anime({
+          targets: ".fade-in",
+          opacity: [0, 1],
+          duration: 1500,
+          delay: anime.stagger(200),
+          easing: "easeOutQuad",
+        });
+
+        // Slide in from left
+        anime({
+          targets: ".slide-in-left",
+          opacity: [0, 1],
+          translateX: ["-50px", "0px"],
+          duration: 1000,
+          delay: anime.stagger(200),
+          easing: "easeOutQuad",
+        });
+
+        // Slide in from right
+        anime({
+          targets: ".slide-in-right",
+          opacity: [0, 1],
+          translateX: ["50px", "0px"],
+          duration: 1000,
+          delay: anime.stagger(200),
+          easing: "easeOutQuad",
+        });
+
+        // Progress bar animation
+        anime({
+          targets: ".progress-bar",
+          width: "78.45%",
+          duration: 1500,
+          easing: "easeInOutQuart",
+        });
+      }
+
+      // Mobile menu functionality
+      function initMobileMenu() {
+        const openMenuBtn = document.getElementById("open-menu");
+        const closeMenuBtn = document.getElementById("close-menu");
+        const mobileMenu = document.getElementById("mobile-menu");
+
+        openMenuBtn.addEventListener("click", () => {
+          mobileMenu.classList.remove("translate-x-full");
+          mobileMenu.classList.add("translate-x-0");
+        });
+
+        closeMenuBtn.addEventListener("click", () => {
+          mobileMenu.classList.remove("translate-x-0");
+          mobileMenu.classList.add("translate-x-full");
+        });
+      }
+
+      // Count animation
+      function initCountAnimation() {
+        const mintCountElement = document.getElementById("mint-count");
+        const finalCount = 7845;
+        const duration = 2000;
+        const startTime = Date.now();
+
+        function updateCount() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const currentCount = Math.floor(progress * finalCount);
+
+          mintCountElement.textContent = currentCount.toLocaleString();
+
+          if (progress < 1) {
+            requestAnimationFrame(updateCount);
+          }
+        }
+
+        updateCount();
+      }
+
+      // Initialize everything
+      document.addEventListener("DOMContentLoaded", function () {
+        initThreeBackground();
+        initTypingEffect();
+        initAnimations();
+        initMobileMenu();
+        initCountAnimation();
+
+        // Handle scroll animations
+        const observerOptions = {
+          threshold: 0.1,
+          rootMargin: "0px 0px -10% 0px",
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              if (entry.target.classList.contains("fade-in")) {
+                anime({
+                  targets: entry.target,
+                  opacity: [0, 1],
+                  duration: 1000,
+                  easing: "easeOutQuad",
+                });
+              } else if (entry.target.classList.contains("slide-in-left")) {
+                anime({
+                  targets: entry.target,
+                  opacity: [0, 1],
+                  translateX: ["-50px", "0px"],
+                  duration: 1000,
+                  easing: "easeOutQuad",
+                });
+              } else if (entry.target.classList.contains("slide-in-right")) {
+                anime({
+                  targets: entry.target,
+                  opacity: [0, 1],
+                  translateX: ["50px", "0px"],
+                  duration: 1000,
+                  easing: "easeOutQuad",
+                });
+              }
+              observer.unobserve(entry.target);
+            }
+          });
+        }, observerOptions);
+
+        document
+          .querySelectorAll(".fade-in, .slide-in-left, .slide-in-right")
+          .forEach((element) => {
+            observer.observe(element);
+          });
+      });
+    </script>
+
+    <!-- Media Queries -->
+    <!-- Media Queries -->
+    <style>
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2.5rem;
+        }
+
+        .nft-grid {
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        }
+
+        .terminal,
+        .glow-box {
+          padding: 1rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 2rem;
+        }
+
+        .nft-grid {
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+
+        .progress-bar {
+          max-width: 90%;
+        }
+
+        .terminal-header {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </body>
+</html>
